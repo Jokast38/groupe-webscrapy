@@ -1,4 +1,3 @@
-
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 import subprocess
@@ -21,30 +20,35 @@ def search():
     import json
     # Met à jour le fichier search_result.json en lançant le spider Scrapy
     output_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../scraper/search_result.json'))
+    if os.path.exists(output_path):
+        os.remove(output_path)
+    import sys
     result = subprocess.run([
-        'wuxia_search',
-        '-a', f'search_query={query}',
-        '-o', output_path,
-        '-t', 'json',
-        '-s', 'LOG_ENABLED=False'
+        sys.executable, '-m', 'scrapy', 'crawl', 'wuxia_search', '-a', f'search_query={query}', '-s', 'LOG_ENABLED=False'
     ], cwd='../scraper', capture_output=True, text=True)
     if result.returncode != 0:
         return jsonify({'error': 'Scrapy error', 'stdout': result.stdout, 'stderr': result.stderr}), 500
-    # Recharge le fichier après le crawl
-    with open(output_path, encoding='utf-8') as f:
-        books = json.load(f)
+    # Recherche les résultats dans la base MongoDB (collection novels)
+    import pymongo
+    from dotenv import load_dotenv
+    load_dotenv(os.path.abspath(os.path.join(os.path.dirname(__file__), '../scraper/.env')))
+    mongo_uri = os.getenv('MONGODB_URI')
+    db_name = os.getenv('DB_NAME')
+    client = pymongo.MongoClient(mongo_uri)
+    db = client[db_name]
+    collection = db['novels']
+    # Recherche insensible à la casse sur le titre
+    books = list(collection.find({'title': {'$regex': query, '$options': 'i'}}).limit(10))
     results = []
     for book in books:
-        if query in book.get('title', '').lower():
-            results.append({
-                'title': book.get('title'),
-                'author': book.get('author', ''),
-                'image_url': book.get('image_url', ''),
-                'url': book.get('url', ''),
-                'slug': book.get('slug', '')
-            })
-        if len(results) >= 10:
-            break
+        results.append({
+            'title': book.get('title'),
+            'author': book.get('author', ''),
+            'image_url': book.get('image_url', ''),
+            'url': book.get('url', ''),
+            'slug': book.get('slug', '')
+        })
+    client.close()
     return jsonify(results)
 
 @app.route('/download', methods=['GET'])
