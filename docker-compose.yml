@@ -1,0 +1,26 @@
+version: '3.8'
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend:/app
+    environment:
+      - FLASK_ENV=development
+  scraper:
+    build: ./scraper
+    volumes:
+      - ./scraper:/app
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: wuxia
+      POSTGRES_PASSWORD: wuxia
+      POSTGRES_DB: wuxia_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+volumes:
+  db_data:

@@ -1,0 +1,51 @@
+/* Style pour la barre de recherche */
+.search-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 1em;
+}
+
+/* Style pour la liste de suggestions */
+#suggestions {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+#suggestions li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+}
+.cover-thumb {
+  width: 48px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 4px;
+  background: #f3f3f3;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+.download-btn {
+  margin-left: auto;
+  background: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 14px;
+  cursor: pointer;
+  font-size: 1em;
+  transition: background 0.2s;
+}
+.download-btn:hover {
+  background: #0056b3;
+}
+body { font-family: Arial, sans-serif; background: #f5f5f5; }
+.container { max-width: 500px; margin: 40px auto; background: #fff; padding: 2em; border-radius: 8px; box-shadow: 0 2px 8px #0001; }
+h1 { text-align: center; }
+#search { width: 100%; padding: 0.7em; font-size: 1.1em; border-radius: 4px; border: 1px solid #ccc; }
+#suggestions { list-style: none; padding: 0; margin: 1em 0; }
+#suggestions li { padding: 0.5em; border-bottom: 1px solid #eee; cursor: pointer; }
+#suggestions li.selected, #suggestions li:hover { background: #d0e7ff; }
+#download { width: 100%; padding: 0.8em; font-size: 1.1em; background: #007bff; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+#download:disabled { background: #aaa; }
