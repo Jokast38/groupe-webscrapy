@@ -1,29 +1,37 @@
+import sys
+if hasattr(sys.stdout, 'encoding') and sys.stdout.encoding and sys.stdout.encoding.lower() != 'utf-8':
+    try:
+        sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf-8', buffering=1)
+    except Exception:
+        pass
 import scrapy
 
 # Spider pour récupérer tous les chapitres d'un roman et générer l'EPUB
 class WuxiaEpubSpider(scrapy.Spider):
     def close(self, reason):
-        # Dump les chapitres collectés dans le terminal pour récupération backend
         import json
-        title = getattr(self, 'slug', 'Unknown')
-        # Si tu as stocké author ailleurs, adapte ici
-        author = ''
-        # Si self.chapters n'est pas rempli, tente de charger depuis le fichier de sortie Scrapy
-        if hasattr(self, 'chapters') and self.chapters:
-            chapters = self.chapters
-        else:
-            chapters = []
-        # Si Scrapy a utilisé FEED_EXPORT pour écrire un fichier, tu peux aussi le charger ici
-        print(f"[EPUB_JSON]" + json.dumps({'title': title, 'author': author, 'chapters': chapters}, ensure_ascii=False))
+        # Debug: print la liste des chapitres même si vide
+        print(f"[EPUB_DEBUG] close called, chapters: {len(getattr(self, 'chapters', []))}", file=sys.stderr, flush=True)
+        # Toujours print le dump JSON, même si vide
+        dump = {
+            'title': getattr(self, 'book_title', ''),
+            'chapters': getattr(self, 'chapters', [])
+        }
+        try:
+            print(f"[EPUB_JSON] {json.dumps(dump, ensure_ascii=False)}", file=sys.stderr, flush=True)
+        except Exception as e:
+            print(f"[EPUB_ERROR] JSON dump failed: {e}", file=sys.stderr, flush=True)
     name = 'wuxia_epub'
     allowed_domains = ['wuxiaworld.com']
 
     def __init__(self, slug=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        print("[EPUB_DEBUG] Spider __init__", file=sys.stderr, flush=True)
         self.slug = slug
         self.chapters = []
 
     def start_requests(self):
+        print("[EPUB_DEBUG] start_requests", file=sys.stderr, flush=True)
         if not self.slug:
             self.logger.error('Slug manquant pour le roman')
             return
@@ -31,6 +39,7 @@ class WuxiaEpubSpider(scrapy.Spider):
         yield scrapy.Request(url, callback=self.parse_novel)
 
     def parse_novel(self, response):
+        print("[EPUB_DEBUG] parse_novel", file=sys.stderr, flush=True)
         # Cherche tous les liens de chapitres sur la page du roman
         chapter_links = response.css('a[href*="/chapter"]::attr(href)').getall()
         chapter_links = [response.urljoin(link) for link in chapter_links]
@@ -61,6 +70,7 @@ class WuxiaEpubSpider(scrapy.Spider):
                 self.logger.error('Impossible de trouver le lien du premier chapitre')
 
     def parse_chapter(self, response):
+        print("[EPUB_DEBUG] parse_chapter", file=sys.stderr, flush=True)
         from w3lib.html import remove_tags
         chap_title = response.css('h4.font-set-b18::text, h4.font-set-b18 *::text').get()
         content_html = response.css('div.chapter-content p').getall()

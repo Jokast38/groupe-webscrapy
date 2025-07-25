@@ -24,7 +24,9 @@ async function doSearch() {
         }
         data.slice(0, 10).forEach(book => {
             const li = document.createElement('li');
-            li.innerHTML = `<img class="cover-thumb" src="${book.image_url || ''}" alt="cover"> <span>${book.title}</span> <button class="download-btn">Télécharger</button>`;
+            // Affiche une image par défaut si image_url absent ou cassé
+            const coverUrl = book.image_url && book.image_url.trim() ? book.image_url : 'https://i.pinimg.com/1200x/ac/81/f0/ac81f0d7df3564c0d8c229b09df743d8.jpg';
+            li.innerHTML = `<img class="cover-thumb" src="${coverUrl}" alt="cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/60x80?text=No+Cover';"> <span>${book.title}</span> <button class="download-btn">Télécharger</button>`;
             const btn = li.querySelector('.download-btn');
             btn.onclick = (e) => {
                 e.stopPropagation();
@@ -75,30 +77,38 @@ function handleDownload(book) {
                 const blob = await response.blob();
                 triggerDownload(blob, book.title || book.slug || 'book.epub');
                 loadingDownload.style.display = 'none';
+                progressBar.value = 100;
+                percentSpan.textContent = '100%';
                 return;
             }
             const total = parseInt(contentLength, 10);
             let loaded = 0;
             const reader = response.body.getReader();
             let chunks = [];
+            function updateProgress(val) {
+                progressBar.value = val;
+                percentSpan.textContent = val + '%';
+                progressBar.dispatchEvent(new Event('change'));
+            }
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
                 chunks.push(value);
                 loaded += value.length;
-                const percent = Math.round((loaded / total) * 100);
-                progressBar.value = percent;
-                percentSpan.textContent = percent + '%';
+                const percent = Math.min(100, Math.round((loaded / total) * 100));
+                updateProgress(percent);
             }
             const blob = new Blob(chunks);
             triggerDownload(blob, book.title || book.slug || 'book.epub');
             loadingDownload.style.display = 'none';
-            percentSpan.textContent = '100%';
+            updateProgress(100);
         })
         .catch((e) => {
             loadingDownload.style.display = 'none';
             errorDiv.textContent = e.message || 'Erreur lors du téléchargement.';
             errorDiv.style.display = 'block';
+            progressBar.value = 0;
+            percentSpan.textContent = '0%';
         });
 }
 

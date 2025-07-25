@@ -20,30 +20,30 @@ Ce projet est un scraper avancé pour wuxiaworld.com qui permet de :
 ```
 groupe-webscrapy/
 ├── backend/
-│   ├── app.py                 # API Flask
-│   ├── database.py            # Configuration base de données
-│   ├── models.py              # Modèles de données
-│   └── requirements.txt       # Dépendances backend
+│   ├── app.py                 # API Flask (recherche, téléchargement EPUB)
+│   ├── requirements.txt       # Dépendances backend
 ├── scraper/
 │   ├── wuxia_scraper/
 │   │   ├── __init__.py
 │   │   ├── spiders/
 │   │   │   ├── __init__.py
-│   │   │   └── wuxia_spider.py
-│   │   ├── items.py           # Définition des items
-│   │   ├── pipelines.py       # Pipeline de traitement
+│   │   │   ├── wuxia_list_spider.py     # Liste tous les romans (API)
+│   │   │   ├── wuxia_search_spider.py   # Recherche par titre
+│   │   │   └── wuxia_epub_spider.py     # Scraping chapitres & EPUB
+│   │   ├── items.py           # Définition des items Scrapy
+│   │   ├── pipelines.py       # Pipelines MongoDB & JSON
 │   │   ├── settings.py        # Configuration Scrapy
 │   │   └── middlewares.py     # Middlewares personnalisés
-│   ├── epub_generator.py      # Générateur EPUB
+│   ├── epub_generator.py      # Générateur EPUB (Python)
 │   ├── scrapy.cfg
 │   └── requirements.txt       # Dépendances scraper
 ├── frontend/
-│   ├── index.html
-│   ├── styles.css
-│   ├── script.js
-│   └── assets/
-└── docker-compose.yml         # Configuration Docker
-
+│   ├── index.html             # Interface web utilisateur
+│   ├── styles.css             # Style moderne et responsive
+│   ├── script.js              # Logique JS (recherche, téléchargement, loader, progression)
+│   └── assets/                # Images, icônes, etc.
+└── docker-compose.yml         # Configuration Docker (optionnel)
+```
 ```
 
 ## 🚀 Instructions d'exécution

@@ -89,7 +89,7 @@ h1 {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 12px 0;
+  padding: 16px;
   border-bottom: 1px solid #e0e7ff;
   background: linear-gradient(90deg, #f1f5ff 80%, #e0e7ff 100%);
   border-radius: 6px;
