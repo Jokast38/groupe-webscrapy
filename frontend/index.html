@@ -12,7 +12,13 @@
             <input type="text" id="search" placeholder="Rechercher un livre..." autocomplete="off">
             <button id="search-btn">Rechercher</button>
         </div>
+        <div id="loading-search" class="loading" style="display:none;">Recherche en cours...</div>
+        <div id="error-message" class="error" style="display:none;"></div>
         <ul id="suggestions"></ul>
+        <div id="loading-download" class="loading" style="display:none;">
+            <span>Téléchargement en cours...</span>
+            <progress id="download-progress" value="0" max="100" style="width:200px; display:inline-block;"></progress>
+        </div>
     </div>
     <script src="script.js"></script>
 </body>

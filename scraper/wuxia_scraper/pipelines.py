@@ -1,4 +1,3 @@
-
 import json
 import os
 import pymongo
@@ -14,7 +13,8 @@ class MongoDBPipeline:
         self.collection = self.db['novels']
 
     def process_item(self, item, spider):
-        self.collection.update_one({'title': item['title']}, {'$set': dict(item)}, upsert=True)
+        title = item.get('title') or item.get('chapter_title')
+        self.collection.update_one({'title': title}, {'$set': dict(item)}, upsert=True)
         return item
 
     def close_spider(self, spider):
