@@ -61,6 +61,9 @@ function handleDownload(book) {
     }
     // Utilise l'URL complète de l'API backend
     const url = `http://127.0.0.1:5000/download?slug=${encodeURIComponent(book.slug)}`;
+    let animInterval = null;
+    let animPercent = 0;
+    let animDirection = 1;
     fetch(url)
         .then(async response => {
             if (!response.ok) {
@@ -73,12 +76,22 @@ function handleDownload(book) {
             }
             const contentLength = response.headers.get('Content-Length');
             if (!contentLength) {
-                // Fallback si pas de taille connue
+                // Mode indéterminé : anime la barre jusqu'à 90% pendant le chargement
+                animPercent = 0;
+                animDirection = 1;
+                animInterval = setInterval(() => {
+                    animPercent += animDirection * 2;
+                    if (animPercent >= 90) animDirection = -1;
+                    if (animPercent <= 10) animDirection = 1;
+                    progressBar.value = animPercent;
+                    percentSpan.textContent = animPercent + '%';
+                }, 80);
                 const blob = await response.blob();
-                triggerDownload(blob, book.title || book.slug || 'book.epub');
-                loadingDownload.style.display = 'none';
+                clearInterval(animInterval);
                 progressBar.value = 100;
                 percentSpan.textContent = '100%';
+                triggerDownload(blob, book.title || book.slug || 'book.epub');
+                loadingDownload.style.display = 'none';
                 return;
             }
             const total = parseInt(contentLength, 10);
@@ -90,20 +103,30 @@ function handleDownload(book) {
                 percentSpan.textContent = val + '%';
                 progressBar.dispatchEvent(new Event('change'));
             }
+            // Anime la barre même si le backend est lent
+            animPercent = 0;
+            animInterval = setInterval(() => {
+                if (animPercent < 90) {
+                    animPercent += 1;
+                    updateProgress(animPercent);
+                }
+            }, 80);
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
                 chunks.push(value);
                 loaded += value.length;
-                const percent = Math.min(100, Math.round((loaded / total) * 100));
+                const percent = Math.min(99, Math.round((loaded / total) * 100));
                 updateProgress(percent);
             }
+            clearInterval(animInterval);
+            updateProgress(100);
             const blob = new Blob(chunks);
             triggerDownload(blob, book.title || book.slug || 'book.epub');
             loadingDownload.style.display = 'none';
-            updateProgress(100);
         })
         .catch((e) => {
+            if (animInterval) clearInterval(animInterval);
             loadingDownload.style.display = 'none';
             errorDiv.textContent = e.message || 'Erreur lors du téléchargement.';
             errorDiv.style.display = 'block';

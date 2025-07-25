@@ -5,12 +5,27 @@ def generate_epub_from_data(book_data, chapters, output_path=None):
     title = book_data.get('title', 'Unknown')
     author = book_data.get('author', 'Unknown')
 
+
     book = epub.EpubBook()
     book.set_title(title)
     book.add_author(author)
     book.set_language('en')
     book.add_metadata('DC', 'title', title)
     book.add_metadata('DC', 'creator', author)
+
+    # Ajout de la couverture si disponible
+    image_url = book_data.get('image_url')
+    if image_url:
+        try:
+            import requests
+            resp = requests.get(image_url, timeout=10)
+            if resp.status_code == 200:
+                cover_data = resp.content
+                cover_item = epub.EpubItem(uid="cover", file_name="cover.jpg", media_type="image/jpeg", content=cover_data)
+                book.add_item(cover_item)
+                book.set_cover("cover.jpg", cover_data)
+        except Exception as e:
+            print(f"[EPUB] Erreur lors de l'ajout de la couverture: {e}")
 
     epub_chapters = []
     for idx, chapter in enumerate(chapters):
