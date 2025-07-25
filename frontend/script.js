@@ -44,7 +44,9 @@ async function doSearch() {
 function handleDownload(book) {
     loadingDownload.style.display = 'block';
     const progressBar = document.getElementById('download-progress');
+    const percentSpan = document.getElementById('progress-percent');
     progressBar.value = 0;
+    percentSpan.textContent = '0%';
     progressBar.style.display = 'inline-block';
     const errorDiv = document.getElementById('error-message');
     errorDiv.style.display = 'none';
@@ -82,11 +84,14 @@ function handleDownload(book) {
                 if (done) break;
                 chunks.push(value);
                 loaded += value.length;
-                progressBar.value = Math.round((loaded / total) * 100);
+                const percent = Math.round((loaded / total) * 100);
+                progressBar.value = percent;
+                percentSpan.textContent = percent + '%';
             }
             const blob = new Blob(chunks);
             triggerDownload(blob, book.title || book.slug || 'book.epub');
             loadingDownload.style.display = 'none';
+            percentSpan.textContent = '100%';
         })
         .catch((e) => {
             loadingDownload.style.display = 'none';
@@ -106,9 +111,7 @@ function triggerDownload(blob, filename) {
         window.URL.revokeObjectURL(url);
         a.remove();
     }, 1000);
-}
-}
-
+};
 
 searchBtn.addEventListener('click', doSearch);
 searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') doSearch(); });

@@ -54,6 +54,9 @@ class WuxiaSearchSpider(scrapy.Spider):
             self.logger.error(f"❌ Erreur lors du parsing de data-posthog-params: {e}")
             return
         image_url = response.css('img.drop-shadow-ww-novel-cover-image::attr(src)').get()
+        # Récupère le résumé dans le bon div/span
+        summary = response.css('div.text-gray-desc span span span::text').getall()
+        summary = '\n'.join([s.strip() for s in summary if s.strip()])
         yield BookItem(
             title=data.get('novelName'),
             author=data.get('novelWriter'),
@@ -61,5 +64,7 @@ class WuxiaSearchSpider(scrapy.Spider):
             genre=', '.join(data.get('novelGenres', [])),
             status='Completed' if data.get('novelStatus') == 1 else 'Ongoing',
             image_url=image_url,
-            summary=''
+            summary=summary,
+            slug=response.meta.get('slug_attempt'),
+            url=response.url
         )

@@ -10,6 +10,8 @@ class BookItem(scrapy.Item):
     rating = scrapy.Field()
     reviews = scrapy.Field()
     summary = scrapy.Field()
+    slug = scrapy.Field()
+    url = scrapy.Field()
 
 
 class ChapterItem(scrapy.Item):
