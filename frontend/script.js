@@ -28,6 +28,7 @@ async function doSearch() {
             const btn = li.querySelector('.download-btn');
             btn.onclick = (e) => {
                 e.stopPropagation();
+                console.log('Téléchargement demandé pour :', book);
                 handleDownload(book);
             };
             suggestions.appendChild(li);
@@ -56,7 +57,8 @@ function handleDownload(book) {
         loadingDownload.style.display = 'none';
         return;
     }
-    const url = `/download?slug=${encodeURIComponent(book.slug)}`;
+    // Utilise l'URL complète de l'API backend
+    const url = `http://127.0.0.1:5000/download?slug=${encodeURIComponent(book.slug)}`;
     fetch(url)
         .then(async response => {
             if (!response.ok) {

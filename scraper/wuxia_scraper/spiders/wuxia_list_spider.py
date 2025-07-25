@@ -16,11 +16,24 @@ class WuxiaListSpider(scrapy.Spider):
         yield scrapy.Request(url, callback=self.parse)
 
     def parse(self, response):
-        data = json.loads(response.text)
+        if response.status != 200:
+            self.logger.error(f"Erreur HTTP {response.status} sur {response.url}")
+            return
+        try:
+            data = json.loads(response.text)
+        except Exception as e:
+            self.logger.error(f"Erreur JSON sur {response.url} : {e}")
+            return
         novels = data.get('items', [])
         for novel in novels:
             yield {
                 'title': novel.get('name'),
+                'slug': novel.get('slug'),
+                'author': novel.get('author', ''),
+                'image_url': novel.get('coverUrl', ''),
+                'status': novel.get('status', ''),
+                'genre': ', '.join(novel.get('genres', [])),
+                'summary': novel.get('shortSynopsis', ''),
                 'url': f"https://www.wuxiaworld.com/novel/{novel.get('slug')}"
             }
         if len(novels) == self.page_size:

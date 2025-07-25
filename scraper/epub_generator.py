@@ -23,9 +23,16 @@ def generate_epub(json_path, output_path=None):
     for idx, chapter in enumerate(chapters):
         chap_title = chapter.get('chapter_title', f'Chapitre {idx+1}')
         c = epub.EpubHtml(title=chap_title, file_name=f'chap_{idx+1}.xhtml', lang='en')
-        # Encodage du contenu pour compatibilité
+        # Amélioration de la gestion des sauts de ligne et paragraphes
         content = chapter.get('content', '')
-        c.content = f'<h2>{chap_title}</h2><div>{content}</div>'
+        # Découpe en paragraphes sur double saut de ligne ou \n\n
+        import re
+        # On considère qu'un paragraphe est séparé par deux sauts de ligne ou plus
+        paragraphs = re.split(r'\n{2,}', content.strip())
+        # Nettoie chaque paragraphe et entoure de <p>
+        html_paragraphs = ['<p>' + p.strip().replace('\n', '<br>') + '</p>' for p in paragraphs if p.strip()]
+        html_content = '\n'.join(html_paragraphs)
+        c.content = f'<h2>{chap_title}</h2><div>{html_content}</div>'
         book.add_item(c)
         epub_chapters.append(c)
     book.toc = tuple(epub_chapters)
@@ -33,6 +40,28 @@ def generate_epub(json_path, output_path=None):
     book.add_item(epub.EpubNav())
     book.spine = ['nav'] + epub_chapters
     if not output_path:
-        output_path = os.path.splitext(json_path)[0] + '.epub'
+        # Nettoie le titre pour un nom de fichier valide
+        import re
+        safe_title = re.sub(r'[^\w\- ]', '', title).strip().replace(' ', '_')
+        if not safe_title:
+            safe_title = 'resultat'
+        output_path = f"{safe_title}.epub"
     epub.write_epub(output_path, book, {})
     return output_path
+
+
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) < 2:
+        print("Usage: python epub_generator.py <resultats.json> [output.epub]")
+        sys.exit(1)
+    json_path = sys.argv[1]
+    output_path = sys.argv[2] if len(sys.argv) > 2 else None
+    try:
+        epub_file = generate_epub(json_path, output_path)
+        if os.path.exists(epub_file):
+            print(f"✅ EPUB généré avec succès : {epub_file}")
+        else:
+            print("❌ Erreur : le fichier EPUB n'a pas été créé.")
+    except Exception as e:
+        print(f"❌ Erreur lors de la génération de l'EPUB : {e}")
